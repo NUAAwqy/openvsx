@@ -100,7 +100,7 @@ async function requestToken(
     extension: string,
     options: TrustedPublishingOptions
 ): Promise<string> {
-    const audience = options.oidcAudience ?? registry.url;
+    const audience = options.oidcAudience ?? await expectedAudience(registry);
     const idToken = await getIdToken(audience, options);
 
     let result: AccessToken;
@@ -140,6 +140,16 @@ async function exchangeWithRetry(
             await new Promise(resolve => setTimeout(resolve, delay));
         }
     }
+}
+
+/**
+ * The audience a registry validates is its own configuration, defaulting to the URL of its web UI
+ * rather than the API URL this CLI talks to, so it is read from where the registry publishes it.
+ * A registry that reports nothing there is asked for the registry URL.
+ */
+async function expectedAudience(registry: Registry): Promise<string> {
+    const reported = await registry.getRegistryVersion().catch(() => undefined);
+    return reported?.trustedPublishingAudience ?? registry.url;
 }
 
 function registrationHint(registry: Registry, namespace: string, extension: string): string {
