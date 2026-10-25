@@ -8,6 +8,7 @@ This change log covers only the command line interface (CLI) of Open VSX.
 
 - `publish -i ext.vsix` now warns about the packaging options it ignores, as `publish ext.vsix` does, naming the file, and publishes the package once instead of once per `--target` (#2351)
 - `get` and `verify` ignore a timeout or connection reset while draining the error body of a rejected download, instead of cleaning up a partial file that was never written (#2386)
+- `publish` prints the exact byte counts next to the friendly sizes of a size limit, so a package one byte over its limit no longer reads as "1 MB exceeds the size limit of 1 MB"
 
 ### Dependencies
 
