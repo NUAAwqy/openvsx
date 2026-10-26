@@ -269,6 +269,18 @@ describe('trusted publishing audience', () => {
         expect(await exchangedAudience(registry, 'versionless')).toEqual([registry.url]);
     });
 
+    // The ID token is a bearer credential and the registry picks its audience, so neither is sent over
+    // plain http. Nothing is minted or requested before that is checked.
+    it('refuses a registry that is not reached over https', async () => {
+        const idTokens = await startIdTokenService();
+
+        await expect(getTrustedPublishingToken(
+            new Registry({ registryUrl: 'http://registry.example.org' }), 'insecure', 'ext', {}
+        )).rejects.toThrow('the registry URL must use https, but it is http://registry.example.org/');
+
+        expect(idTokens.audiences).toEqual([]);
+    });
+
     // An explicit audience is what the caller asked for, so the registry is not asked.
     it('prefers an explicit audience without consulting the registry', async () => {
         const registry = await startPublishingRegistry({

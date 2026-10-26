@@ -68,6 +68,8 @@ Options:
 
 The issued token is valid for a few minutes only and is never written to the token store, but it does carry publishing rights, so treat CI logs accordingly.
 
+The ID token is only sent to a registry reached over https, so a plain `http://` registry URL is refused (a loopback address such as `localhost` is exempt). Publish with an access token there instead.
+
 ### Delete Extensions
 
 You can delete extensions you published with `ovsx unpublish`, the counterpart of `vsce unpublish`. This requires an access token as described above, and the token's user must be a member of the extension's namespace: namespace owners may delete any version, other members only the versions they published themselves. This requires a registry running version 1.2.0 or later.

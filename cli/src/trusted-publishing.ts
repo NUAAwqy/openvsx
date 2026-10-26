@@ -13,7 +13,7 @@
 
 import { getIdToken, hasIdTokenSource } from './oidc';
 import { AccessToken, Registry } from './registry';
-import { StatusError } from './util';
+import { StatusError, redactUrl } from './util';
 import { TrustedPublishingOptions } from './trusted-publishing-options';
 
 const tokens = new Map<string, Promise<string>>();
@@ -100,6 +100,7 @@ async function requestToken(
     extension: string,
     options: TrustedPublishingOptions
 ): Promise<string> {
+    requireSecureRegistry(registry);
     const audience = options.oidcAudience ?? await expectedAudience(registry);
     const idToken = await getIdToken(audience, options);
 
@@ -140,6 +141,22 @@ async function exchangeWithRetry(
             await new Promise(resolve => setTimeout(resolve, delay));
         }
     }
+}
+
+/**
+ * The ID token is a bearer credential for publishing, and the registry also chooses the audience it
+ * is minted for, so both only travel over https. A loopback registry is exempt, as for a browser's
+ * secure contexts: nothing leaves the machine.
+ */
+function requireSecureRegistry(registry: Registry): void {
+    const { protocol, hostname } = new URL(registry.url);
+    if (protocol === 'https:' || hostname === 'localhost' || hostname === '[::1]' || /^127\./.test(hostname)) {
+        return;
+    }
+    throw new Error(
+        `Trusted publishing sends an ID token to the registry, so the registry URL must use https, `
+        + `but it is ${redactUrl(registry.url)}. Use an https URL, or publish with an access token.`
+    );
 }
 
 /**
